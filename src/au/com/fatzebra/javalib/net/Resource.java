@@ -11,16 +11,16 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.codec.binary.Base64;
+import sun.net.www.protocol.https.DefaultHostnameVerifier;
 
 import javax.net.ssl.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
 
 
 /**
@@ -103,9 +103,19 @@ public abstract class Resource extends FZBase {
      * @return HttpsURLConnection the connection Object
      * @throws IOException
      */
-    private static javax.net.ssl.HttpsURLConnection createApiConnection(String urlSuffix, GatewayContext ctx) throws IOException {
+    private static javax.net.ssl.HttpsURLConnection createApiConnection(String urlSuffix, GatewayContext ctx) throws IOException, NoSuchAlgorithmException, KeyManagementException {
         URL gatewayUrl = new URL(FatZebra.getGatewayUrl(urlSuffix, ctx));
+
         javax.net.ssl.HttpsURLConnection conn = (javax.net.ssl.HttpsURLConnection) gatewayUrl.openConnection();
+
+        SSLParameters sslParameters = new SSLParameters();
+        List sniHostNames = new ArrayList(1);
+        sniHostNames.add(new SNIHostName(gatewayUrl.getHost()));
+        sslParameters.setServerNames(sniHostNames);
+        SSLSocketFactory wrappedSSLSocketFactory = new SSLSocketFactoryWrapper(SSLContext.getDefault().getSocketFactory(), sslParameters);
+
+        conn.setSSLSocketFactory(wrappedSSLSocketFactory);
+        conn.setHostnameVerifier(new DefaultHostnameVerifier());
         conn.setConnectTimeout(FatZebra.timeout * 1000);
         conn.setReadTimeout(FatZebra.timeout * 1000);
         conn.setUseCaches(false);
@@ -115,14 +125,14 @@ public abstract class Resource extends FZBase {
         return conn;
     }
 
-    protected static javax.net.ssl.HttpsURLConnection createGetConnection(String url, String query, GatewayContext ctx) throws IOException {
+    protected static javax.net.ssl.HttpsURLConnection createGetConnection(String url, String query, GatewayContext ctx) throws IOException, KeyManagementException, NoSuchAlgorithmException {
         String getURL = String.format("%s?%s", url, query);
         javax.net.ssl.HttpsURLConnection conn = createApiConnection(getURL, ctx);
         conn.setRequestMethod("GET");
         return conn;
     }
 
-    protected static javax.net.ssl.HttpsURLConnection createPostConnection(String url, Object payloadObject, GatewayContext ctx) throws IOException {
+    protected static javax.net.ssl.HttpsURLConnection createPostConnection(String url, Object payloadObject, GatewayContext ctx) throws IOException, KeyManagementException, NoSuchAlgorithmException {
         javax.net.ssl.HttpsURLConnection conn = createApiConnection(url, ctx);
         conn.setDoOutput(true);
         conn.setRequestMethod("POST");
@@ -139,7 +149,7 @@ public abstract class Resource extends FZBase {
         return conn;
     }
 
-    protected static javax.net.ssl.HttpsURLConnection createDeleteConnection(String url, Object payloadObject, GatewayContext ctx) throws IOException {
+    protected static javax.net.ssl.HttpsURLConnection createDeleteConnection(String url, Object payloadObject, GatewayContext ctx) throws IOException, KeyManagementException, NoSuchAlgorithmException {
         javax.net.ssl.HttpsURLConnection conn = createApiConnection(url, ctx);
         conn.setDoOutput(true);
         conn.setRequestMethod("DELETE");
@@ -197,9 +207,15 @@ public abstract class Resource extends FZBase {
             throw new NetworkError(String.format("Unable to resolve address for %s", ex.getMessage()), true, ex);
         } catch(java.net.ConnectException ex) {
             throw new NetworkError(String.format("Unable to connect to Gateway: %s", ex.getMessage()), true, ex);
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (KeyManagementException e) {
+            e.printStackTrace();
         } finally {
             enableDnsCache();
         }
+
+        return null;
     }
 
     protected static void disableDnsCache() {
