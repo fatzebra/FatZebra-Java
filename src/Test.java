@@ -15,6 +15,7 @@ public class Test {
         ctx.username = "TEST";
         ctx.token = "TEST";
         ctx.sandbox = true;
+        ctx.sandbox_url = "https://sandbox-gateway-cf.pmnts-sandbox.io/v1.0/";
 
         int cardExpiryMonth = 9;
         int cardExpiryYear = 2017;

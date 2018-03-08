@@ -106,6 +106,9 @@ public abstract class Resource extends FZBase {
     private static javax.net.ssl.HttpsURLConnection createApiConnection(String urlSuffix, GatewayContext ctx) throws IOException, NoSuchAlgorithmException, KeyManagementException {
         URL gatewayUrl = new URL(FatZebra.getGatewayUrl(urlSuffix, ctx));
 
+        System.err.println("***** FZ Hybris Logging *****");
+        System.err.println(String.format("Default Hostname Verifier: %s", javax.net.ssl.HttpsURLConnection.getDefaultHostnameVerifier()));
+        System.err.println(String.format("SSL Socket Factory: %s", javax.net.ssl.HttpsURLConnection.getDefaultSSLSocketFactory()));
         javax.net.ssl.HttpsURLConnection conn = (javax.net.ssl.HttpsURLConnection) gatewayUrl.openConnection();
 
         SSLParameters sslParameters = new SSLParameters();

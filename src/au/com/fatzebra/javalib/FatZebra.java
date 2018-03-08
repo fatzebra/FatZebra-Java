@@ -44,9 +44,9 @@ public class FatZebra {
      */
     public static String getGatewayUrl(String suffix, GatewayContext ctx) {
         if (ctx.sandbox) {
-            return SANDBOX_URL + suffix;
+            return ctx.sandbox_url + suffix;
         } else {
-            return LIVE_URL + suffix;
+            return ctx.live_url + suffix;
         }
     }
 
