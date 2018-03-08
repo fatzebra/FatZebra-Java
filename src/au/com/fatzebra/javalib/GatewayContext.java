@@ -7,8 +7,8 @@ public class GatewayContext {
     public String username = "TEST";
     public String token = "TEST";
     public boolean sandbox = true;
-    public String live_url = "gateway.fatzebra.com.au";
-    public String sandbox_url = "gateway.sandbox.fatzebra.com.au";
+    public String live_url = FatZebra.LIVE_URL;
+    public String sandbox_url = FatZebra.SANDBOX_URL;
 
     public GatewayContext(String username, String token, boolean sandbox) {
         this.username = username;
